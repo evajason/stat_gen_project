@@ -7,6 +7,8 @@ args = commandArgs(trailingOnly=TRUE)
 # This script takes a GWAS file with columns called 'beta' and 'standard error'
 # and out puts the a file with these columns renamed and a column called Z for 
 # the z-score
+library(dplyr)
+library(data.table)
 
 df = fread(args[1]) %>%
   mutate(Z = beta/standard_error) %>%
