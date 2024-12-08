@@ -106,8 +106,8 @@ shared_sig = intersect(gwasResults_sig$rsid, twasResults$rsid)
 twasIdeo = filter(twasResults, !rsid %in% shared_sig) %>%
   select(CHR, P0, P1) %>%
   rename(Chr = CHR,  Start = P0, End = P1) %>%
-  mutate(Chr = as.integer(Chr), Start = as.integer(Start), End = as.numeric(End), Type = "TWAS", Shape = "box", color = "33a02c") #%>%
-  #mutate(Type = ifelse(df_match$rsid %in% rsid, "Both", Type))
+  mutate(Chr = as.integer(Chr), Start = as.integer(Start), 
+         End = as.numeric(End), Type = "TWAS", Shape = "box", color = "33a02c")
 
 gwasIdeo = filter(gwasResults_sig, !rsid %in% shared_sig) %>%
   select(base_pair_location, chromosome) %>%
