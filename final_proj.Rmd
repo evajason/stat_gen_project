@@ -116,13 +116,13 @@ gwasIdeo = filter(gwasResults_sig, !rsid %in% shared_sig) %>%
          Type = "GWAS", Shape = "circle", color = "6a3d9a") %>%
   rename(Start = base_pair_location, Chr = chromosome)
 
-shared = filter(twasResults, rsid %in% shared_sig) %>%
+sharedIdeo = filter(twasResults, rsid %in% shared_sig) %>%
   select(CHR, P0, P1) %>%
   rename(Chr = CHR,  Start = P0, End = P1) %>%
   mutate(Chr = as.integer(Chr), Start = as.integer(Start), End = as.numeric(End), Type = "Both", Shape = "triangle", color = "ff7f00")
 
 dfIdeo = rbind(twasIdeo, gwasIdeo) %>%
-  rbind(shared) %>%
+  rbind(sharedIdeo) %>%
   select(Type, Shape, Chr, Start, End, color)
 
 ideogram(karyotype = human_karyotype, overlaid = gene_density, label = dfIdeo, label_type = "marker")
@@ -130,6 +130,43 @@ ideogram(karyotype = human_karyotype, overlaid = gene_density, label = dfIdeo, l
 # increased quality to 600
 convertSVG("chromosome.svg", device = "png", dpi=600)
 ```
+
+## Merge TWAS and GWAS results
+
+Get a data frame that has the full set of results. The merge is performed by rsID. 
+The rsID for the twas corresponds to the columns `BEST.GWAS.ID`. 
+
+```{r}
+match_df = merge(twasResults, gwasResults) %>%
+  # remove rows where the GWAS p-value is less than the cutoff
+  filter(p_value <= cutoff) %>%
+  mutate(rsid_id = paste0(rsid, "/", ID))
+```
+
+```{r}
+match_df_gwas = select(match_df, p_value, rsid_id, Z) %>%
+  mutate(model = "GWAS")
+
+match_df_twas = select(match_df, FDR, rsid_id, TWAS.Z, model) %>%
+  rename(p_value = FDR, Z = TWAS.Z)
+
+df_match_long = rbind(match_df_gwas, match_df_twas)
+```
+
+```{r}
+bar_match = ggplot(df_match_long, aes(fill=model, y=Z, x=rsid_id)) + 
+  geom_bar(position="dodge", stat="identity") +
+  #geom_text(aes(label=significant), position=position_dodge(width=0.9)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5), 
+        axis.title.y=element_blank(), legend.title=element_blank()) +
+  coord_flip()
+bar_match
+ggsave("bar_match.png")
+```
+
+
+
 
 ```{r}
 df_match_table = select(df_match, rsid, Z, p_value, TWAS.Z, FDR, ID) %>%
