@@ -1,6 +1,5 @@
 ---
-title: "Final Project DSC 291"
-author: "Eva Jason"
+title: "Analysis of GWAS and TWAS Results"
 date: "`r Sys.Date()`"
 output: pdf_document
 ---
@@ -17,27 +16,37 @@ library(kableExtra)
 library(RIdeogram)
 ```
 
-## Read TWAS Result Files
-
-If more TWASes are preformed, they can be added here.
+Set up variables:
 
 ```{r}
-twasResults = read.table("GTEx_2ndGWAS_TWASsig_genes") %>%
+twas1 = "GTEx_2ndGWAS_TWASsig_genes"
+twas2 = "breastcancer_tcga_tumor_ex2.top"
+
+gwas = "../fusion_twas-master/GCST90454347.rename.h.tsv"
+
+# Genome wide significance cutoff:
+cutoff = 5e-8
+```
+
+
+## Read TWAS Result Files
+
+If more TWASes are performed, they can be added here.
+
+```{r}
+twasResults1 = read.table(twas1) %>%
   mutate(rsid = BEST.GWAS.ID, model = "GTEx")
 
-twasResults2 = read.table("breastcancer_tcga_tumor_ex2.top") %>%
+twasResults2 = read.table(twas2) %>%
   mutate(rsid = BEST.GWAS.ID, model = "TCGA")
 
-twasResults = rbind(twasResults, twasResults2)
+twasResults = rbind(twasResults1, twasResults2)
 ```
 
 ## Read GWAS summary statistics
 
 ```{r}
-# Genome wide significance cutoff:
-cutoff = 5e-8
-
-gwasResults = fread("../fusion_twas-master/GCST90454347.rename.h.tsv")
+gwasResults = fread(gwas)
 qq(gwasResults$p_value)
 ```
 
