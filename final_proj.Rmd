@@ -159,6 +159,10 @@ write.table(df_match_wide, "df_match_wide.tsv", , sep = "\t", quote = F,
             row.names = F)
 ```
 
+This bar charts compares the affect sizes (Z-scores) of the variants from the 
+TWAS and GWAS. Additionally the data set for the eQTL model in the TWAS is 
+separated by color. 
+
 ```{r}
 bar_match = ggplot(df_match_long, aes(fill=model, y=Z, x=rsid_id)) + 
   geom_bar(position="dodge", stat="identity") +
