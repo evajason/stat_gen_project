@@ -151,6 +151,12 @@ match_df_twas = select(match_df, FDR, rsid_id, TWAS.Z, model) %>%
   rename(p_value = FDR, Z = TWAS.Z)
 
 df_match_long = rbind(match_df_gwas, match_df_twas)
+write.table(df_match_long, "df_match_long.tsv",sep = "\t", quote = F, 
+            row.names = F, col.names = F)
+
+df_match_wide = cbind(select(match_df, p_value, rsid_id, Z), select(match_df, FDR, rsid_id, TWAS.Z, model))
+write.table(df_match_wide, "df_match_wide.tsv", , sep = "\t", quote = F, 
+            row.names = F, col.names = F)
 ```
 
 ```{r}
@@ -164,56 +170,5 @@ bar_match = ggplot(df_match_long, aes(fill=model, y=Z, x=rsid_id)) +
 bar_match
 ggsave("bar_match.png")
 ```
-
-
-
-
-```{r}
-df_match_table = select(df_match, rsid, Z, p_value, TWAS.Z, FDR, ID) %>%
-  mutate(rsid_id = paste0(rsid, "/", ID)) %>%
-  select(-rsid, -ID) %>%
-  mutate(p_value = format(p_value, scientific = T), p_value_adj =  format(FDR, scientific = T))
-df_match_table_gwas = select(df_match_table, rsid_id, Z, p_value) %>%
-  mutate(study = "GWAS") %>%
-  mutate(significant = ifelse(as.numeric(p_value) < cutoff, "*", ""))
-df_match_table_twas = select(df_match_table, rsid_id, TWAS.Z, p_value_adj, FDR) %>%
-  mutate(significant = ifelse(FDR < 0.05,"*", "")) %>%
-  rename(Z = TWAS.Z, p_value = p_value_adj) %>%
-  mutate(study = "TWAS") %>%
-  select(-FDR)
-
-df_match_long = rbind(df_match_table_gwas, df_match_table_twas)
-
-bar_match = ggplot(df_match_long, aes(fill=study, y=Z, x=rsid_id)) + 
-  geom_bar(position="dodge", stat="identity") +
-  geom_text(aes(label=significant), position=position_dodge(width=0.9)) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, vjust=0.5), axis.title.y=element_blank()) +
-  coord_flip()
-bar_match
-ggsave("bar_match.png")
-
-write.table(df_match_long, "table_matching_twas_gwas.tsv", row.names = F, quote = F, sep = "\t")
-
-df_match_wide = select(df_match, rsid, Z, p_value, ID, TWAS.Z, FDR) %>%
-  mutate(Z = round(Z, 2),TWAS.Z = round(TWAS.Z, 2)) %>%
-  mutate(p_value = format(p_value, scientific = T), p_value_adj =  format(FDR, scientific = T))
-write.table(df_match_wide, "table_matching_twas_gwas_wide.tsv", row.names = F, quote = F, sep = "\t")
-```
-
-```{r}
-only_sig = filter(df_match, FDR < 0.05, p_value < cutoff) %>%
-  select(rsid, chromosome, base_pair_location, ID, CHR, P0,P1, FDR, p_value, Z, TWAS.Z)
-write.table(only_sig, "onlysig.tsv", sep = "\t", quote = F, row.names = F)
-```
-
-
-
-
-```{r}
-write.table(gwasResults_sig$rsid, "gwasResults_sig_rsid.txt", sep = "\t", quote = F, row.names = F, col.names = F)
-write.table(twasResults$ID, "twasResults_sig_ID.txt", sep = "\t", quote = F, row.names = F, col.names = F)
-```
-
 
 
