@@ -154,7 +154,8 @@ df_match_long = rbind(match_df_gwas, match_df_twas)
 write.table(df_match_long, "df_match_long.tsv",sep = "\t", quote = F, 
             row.names = F)
 
-df_match_wide = cbind(select(match_df, p_value, rsid_id, Z), select(match_df, FDR, rsid_id, TWAS.Z, model))
+df_match_wide = cbind(select(match_df, p_value, rsid_id, Z, chromosome, 
+                             base_pair_location), select(match_df, FDR, rsid_id, TWAS.Z, model))
 write.table(df_match_wide, "df_match_wide.tsv", , sep = "\t", quote = F, 
             row.names = F)
 ```
