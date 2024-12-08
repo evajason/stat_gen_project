@@ -19,6 +19,8 @@ library(RIdeogram)
 
 ## Read TWAS Result Files
 
+If more TWASes are preformed, they can be added here.
+
 ```{r}
 twasResults = read.table("GTEx_2ndGWAS_TWASsig_genes") %>%
   mutate(rsid = BEST.GWAS.ID, model = "GTEx")
@@ -64,9 +66,7 @@ don  = gwasResults %>%
 axisdf = don %>%
   group_by(chromosome) %>%
   summarize(center=(as.numeric(max(BPcum)) + as.numeric(min(BPcum) )) / 2 )
-```
 
-```{r}
 man_plot = ggplot(don, aes(x=BPcum, y=-log10(p_value))) +
     
     # Show all points
@@ -90,9 +90,6 @@ man_plot = ggplot(don, aes(x=BPcum, y=-log10(p_value))) +
 man_plot
 
 ggsave("manhattan_plot.png")
-
-#man_plot + ylim(0,20)
-ggsave("manhattan.png")
 ```
 
 ## Create Ideogram
@@ -100,13 +97,11 @@ ggsave("manhattan.png")
 Documentation can be found here:
 https://cran.r-project.org/web/packages/RIdeogram/vignettes/RIdeogram.html
 
-A gene density
+A gene density overlay is used.
 
 ```{r}
-cutoff = 5e-8
 gwasResults_sig = filter(gwasResults, p_value <= cutoff)
 shared_sig = intersect(gwasResults_sig$rsid, twasResults$rsid)
-
 
 twasIdeo = filter(twasResults, !rsid %in% shared_sig) %>%
   select(CHR, P0, P1) %>%
@@ -131,6 +126,8 @@ dfIdeo = rbind(twasIdeo, gwasIdeo) %>%
   select(Type, Shape, Chr, Start, End, color)
 
 ideogram(karyotype = human_karyotype, overlaid = gene_density, label = dfIdeo, label_type = "marker")
+
+# increased quality to 600
 convertSVG("chromosome.svg", device = "png", dpi=600)
 ```
 
