@@ -19,10 +19,10 @@
 - See `final.sh` for code chunks. Please ensure that your edited sumstats file is named `harmonized2.tsv`. 
 - After running FUSION on all chromosomes, see `final.R` to aggregate the TWAS significant genes across all chromosomes. 
 
-5. Compare GWAS and TWAS significant results
-
-- See `final.Rmd` for code chunks. 
-
-6. Run FOCUS (install FOCUS [here](https://github.com/mancusolab/ma-focus))
+5. Run FOCUS (install FOCUS [here](https://github.com/mancusolab/ma-focus))
 
 - See `final.R` for fine-mapping setup. Run focus finemap from `final.sh`.
+
+6. Compare GWAS and TWAS significant results with FOCUS results
+
+- See `final_proj.Rmd` for code chunks.
