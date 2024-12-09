@@ -164,7 +164,7 @@ write.table(df_match_long, "df_match_long.tsv",sep = "\t", quote = F,
             row.names = F)
 
 df_match_wide = cbind(select(match_df, p_value, rsid_id, Z, chromosome, 
-                             base_pair_location), select(match_df, FDR, rsid_id, TWAS.Z, model))
+                             base_pair_location), select(match_df, FDR, rsid_id, TWAS.Z, model, ID))
 write.table(df_match_wide, "df_match_wide.tsv", , sep = "\t", quote = F, 
             row.names = F)
 ```
@@ -184,4 +184,27 @@ bar_match
 ggsave("bar_match.png")
 ```
 
+## Results from FOCUS:
+
+```{r}
+focus_GTEx_ch15 = read.table("focus_results_bc_gtex2_chr15.focus.tsv", header = T)
+focus_GTEx_ch3 = read.table("focus_results_bc_gtex2_chr3.focus.tsv", header = T)
+focus_GTEx_ch12 = read.table("focus_results_bc_gtex2_chr12.focus.tsv", header = T)
+
+focus_TCGA_ch3 = read.table("focus_result_bc_tcga3.focus.tsv", header = T)
+focus_TCGA_ch12 = read.table("focus_result_bc_tcga12.focus.tsv", header = T)
+focus_TCGA_ch15 = read.table("focus_result_bc_tcga15.focus.tsv", header = T)
+focus_TCGA_ch16 = read.table("focus_result_bc_tcga16.focus.tsv", header = T)
+
+df_focus = do.call(rbind, list(focus_TCGA_ch3, focus_TCGA_ch12, focus_TCGA_ch15,
+                               focus_TCGA_ch16, focus_GTEx_ch15, focus_GTEx_ch3, 
+                               focus_GTEx_ch12)) %>%
+  rename(ID = ens_gene_id) %>%
+  filter(in_cred_set_pop1 > 0)
+
+df_shared = merge(df_focus, df_match_wide) %>%
+  select(ID, chrom, tx_start, tx_stop, twas_z_pop1, pips_pop1, model, hsq)
+write.table(df_shared, "df_shared_focus_results.tsv",sep = "\t", quote = F, 
+            row.names = F)
+```
 
