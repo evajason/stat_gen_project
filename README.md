@@ -1,4 +1,10 @@
-# Set Up:
+## Introduction
+
+This is a final project for Statistical Genomics (DSC 291) taught at UCSD Fall 2024
+
+Given the impact of genetics on breast cancer, we would like to see if TWAS and GWAS have any shared loci of expressed genes and variants associated with breast cancer. Going beyond associations, we would like to see if there are any “causal” genes identified using fine-mapping.
+
+## Set Up:
 
 1. Install FUSION: Follow the installation instructions according to the guidelines on their [repository](http://gusevlab.org/projects/fusion/).
 
