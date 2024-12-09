@@ -20,7 +20,11 @@ Given the impact of genetics on breast cancer, we would like to see if TWAS and 
 
 3. Modify the GWAS sumstats files for FUSION
 
-- Rename the columns so that we have `SNP`, `A1`, and `A2`, and calculate the `Z` column. 
+- Rename the columns so that we have `SNP`, `A1`, and `A2`, and calculate the `Z` column.
+
+`Rscript make_z_col.R GCST90454347.h.tsv.gz` 
+
+The script will take a GWAS summary stats file and write it out as a tsv with the correct columns.
 
 4. Run FUSION on both predictive models (GTEx and TCGA)
 
