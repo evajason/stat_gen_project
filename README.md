@@ -1,4 +1,10 @@
-# Set Up:
+## Introduction
+
+This is a final project for Statistical Genomics (DSC 291) taught at UCSD Fall 2024
+
+Given the impact of genetics on breast cancer, we would like to see if TWAS and GWAS have any shared loci of expressed genes and variants associated with breast cancer. Going beyond associations, we would like to see if there are any “causal” genes identified using fine-mapping.
+
+## Set Up:
 
 1. Install FUSION: Follow the installation instructions according to the guidelines on their [repository](http://gusevlab.org/projects/fusion/).
 
@@ -9,6 +15,8 @@
 - Harmonized GWAS summary statistics for breast cancer from the GWAS Catalog created by EMBL-EBI, study [GCST90454347](https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90454001-GCST90455000/GCST90454347/harmonised/GCST90454347.h.tsv.gz)
 
 (Following the steps and code in `final.R` and `final.sh`...) 
+
+## Run the analysis:
 
 3. Modify the GWAS sumstats files for FUSION
 
