@@ -10,6 +10,7 @@ Follow the installation instructions according to the guidelines on their [repos
 - Harmonized GWAS summary statistics for breast cancer from the GWAS Catalog created by EMBL-EBI, study [GCST90454347](https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90454001-GCST90455000/GCST90454347/harmonised/GCST90454347.h.tsv.gz)
 
 (Following the steps and code in `final.R` and `final.sh`...) 
+
 3. Modify the GWAS sumstats files for FUSION
 Rename the columns so that we have `SNP`, `A1`, and `A2`, and calculate the `Z` column. 
 
