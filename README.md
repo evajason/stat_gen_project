@@ -16,6 +16,8 @@ Given the impact of genetics on breast cancer, we would like to see if TWAS and 
 
 (Following the steps and code in `final.R` and `final.sh`...) 
 
+## Run the analysis:
+
 3. Modify the GWAS sumstats files for FUSION
 
 - Rename the columns so that we have `SNP`, `A1`, and `A2`, and calculate the `Z` column. 
