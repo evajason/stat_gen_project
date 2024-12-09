@@ -12,14 +12,17 @@
 
 3. Modify the GWAS sumstats files for FUSION
 
-Rename the columns so that we have `SNP`, `A1`, and `A2`, and calculate the `Z` column. 
+- Rename the columns so that we have `SNP`, `A1`, and `A2`, and calculate the `Z` column. 
 
 4. Run FUSION on both predictive models (GTEx and TCGA)
 
-See `final.sh` for code chunks. Please ensure that your edited sumstats file is named `harmonized2.tsv`. After running FUSION on all chromosomes, see `final.R` to aggregate the TWAS significant genes across all chromosomes. 
+- See `final.sh` for code chunks. Please ensure that your edited sumstats file is named `harmonized2.tsv`. 
+- After running FUSION on all chromosomes, see `final.R` to aggregate the TWAS significant genes across all chromosomes. 
 
 5. Compare GWAS and TWAS significant results
 
-5. Run FOCUS (install FOCUS [here](https://github.com/mancusolab/ma-focus))
+- See `final.Rmd` for code chunks. 
 
-See `final.R` for fine-mapping setup. Run focus finemap from `final.sh`.
+6. Run FOCUS (install FOCUS [here](https://github.com/mancusolab/ma-focus))
+
+- See `final.R` for fine-mapping setup. Run focus finemap from `final.sh`.
