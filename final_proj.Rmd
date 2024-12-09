@@ -1,6 +1,5 @@
 ---
-title: "Final Project DSC 291"
-author: "Eva Jason"
+title: "Analysis of GWAS and TWAS Results"
 date: "`r Sys.Date()`"
 output: pdf_document
 ---
@@ -11,110 +10,43 @@ library(data.table)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(ggrepel)
 library(qqman)
 library(kableExtra)
+library(RIdeogram)
 ```
 
-## Inspect the results from the TCGA dataset
+Set up variables:
 
 ```{r}
-res_tcga_h = list.files(path="../fusion_twas-master/TCGA", pattern = "TCGA")
-res_list_tcga_h = c()
-for (i in 1:length(res_tcga_h)){
-  b = read.table(paste0("../fusion_twas-master/TCGA/", res_tcga_h[[i]]), header=T) %>%
-    drop_na(TWAS.P) %>%
-    mutate(TWAS.P_adj_fdr  = p.adjust(TWAS.P, "fdr")) %>%
-    filter(TWAS.P_adj_fdr <= 0.05) %>%
-    mutate(dataset = "TCGA")
-  res_list_tcga_h[[i]] = b
-}
-res_list_tcga_h = do.call(rbind, res_list_tcga_h)
-```
+twas1 = "GTEx_2ndGWAS_TWASsig_genes"
+twas2 = "breastcancer_tcga_tumor_ex2.top"
 
-## Inspect the results from TCGA SP dataset
+gwas = "../fusion_twas-master/GCST90454347.rename.h.tsv"
 
-```{r}
-res_tcga_sp = list.files(path="../fusion_twas-master/TCGA_SP", pattern = "TCGA")
-res_list_tcga_sp = c()
-for (i in 1:length(res_tcga_sp)){
-  b = read.table(paste0("../fusion_twas-master/TCGA_SP/", res_tcga_sp[[i]]), header=T) %>%
-    drop_na(TWAS.P) %>%
-    mutate(TWAS.P_adj_fdr  = p.adjust(TWAS.P, "fdr")) %>%
-    filter(TWAS.P_adj_fdr <= 0.05)  %>%
-    mutate(dataset = "TCGA_SP")
-  res_list_tcga_sp[[i]] = b
-}
-res_list_tcga_sp = do.call(rbind, res_list_tcga_sp)
-```
-
-## Inspect the results from TCGA GE dataset
-
-```{r}
-res_tcga_ge = list.files(path="../fusion_twas-master/TCGA_GE", pattern = "TCGA")
-res_list_tcga_ge = c()
-for (i in 1:length(res_tcga_ge)){
-  b = read.table(paste0("../fusion_twas-master/TCGA_GE/", res_tcga_ge[[i]]), header=T) %>%
-    drop_na(TWAS.P) %>%
-    mutate(TWAS.P_adj_fdr  = p.adjust(TWAS.P, "fdr")) %>%
-    filter(TWAS.P_adj_fdr <= 0.05)  %>%
-    mutate(dataset = "TCGA_GE")
-  res_list_tcga_ge[[i]] = b
-}
-res_list_tcga_ge = do.call(rbind, res_list_tcga_ge)
-```
-
-## Another dataset can be inspected as follows:
-
-Replace the paths for the `.dat` files and the pattern specified in the bash 
-file for the output. Change the 'dataset' variable for the name of the source of
-the data
-
-```{r, eval=F}
-res = list.files(path="path/to/datfiles", pattern = "ABCD")
-res_list = c()
-for (i in 1:length(res)){
-  b = read.table(paste0("path/to/datfiles", res_list[[i]]), header=T) %>%
-    drop_na(TWAS.P) %>%
-    mutate(TWAS.P_adj_fdr  = p.adjust(TWAS.P, "fdr")) %>%
-    filter(TWAS.P_adj_fdr <= 0.05)  %>%
-    mutate(dataset = "dataset")
-  res_list[[i]] = b
-}
-res_list = do.call(rbind, res_list)
-```
-
-## Combine the datasets into one data frame
-
-```{r}
-twas_all_results = rbind(res_list_tcga_h, res_list_tcga_sp, res_list_tcga_ge) %>%
-  select(BEST.GWAS.ID, BEST.GWAS.Z, ID, TWAS.Z, TWAS.P_adj_fdr, dataset) %>%
-  rename(SNP = BEST.GWAS.ID)
-```
-
-## Compare to GWAS
-
-Read in the same GWAS used in the TWAS study.
-
-```{r}
-gwasResults = fread("../fusion_twas-master/34737426-GCST90043925-EFO_1000326.rename.h.tsv") %>%
-  mutate(log10_pval = -log10(p_value))
-```
-Here we look at the SNPs that were found in the TWAS compared to those found in GWAS
-
-```{r}
-#gwasResults_twas_match = filter(gwasResults, SNP %in% twas_all_results$SNP)
-df_match = merge(gwasResults_twas_match, twas_all_results, by = "SNP") %>%
-  select(SNP, ID, hm_beta, p_value, beta, TWAS.P_adj_fdr)
-
-kable(df_match)
-```
-
-```{r}
+# Genome wide significance cutoff:
 cutoff = 5e-8
-gwasResults_sig = filter(gwasResults, p_value <= cutoff)
 ```
 
+
+## Read TWAS Result Files
+
+If more TWASes are performed, they can be added here.
+
 ```{r}
+twasResults1 = read.table(twas1) %>%
+  mutate(rsid = BEST.GWAS.ID, model = "GTEx")
+
+twasResults2 = read.table(twas2) %>%
+  mutate(rsid = BEST.GWAS.ID, model = "TCGA")
+
+twasResults = rbind(twasResults1, twasResults2)
+```
+
+## Read GWAS summary statistics
+
+```{r}
+gwasResults = fread(gwas)
 qq(gwasResults$p_value)
 ```
 
@@ -123,14 +55,14 @@ Prepare the Manhattan Plot:
 Code derived from https://r-graph-gallery.com/101_Manhattan_plot.html
 
 ```{r, cache=T}
-don <- gwasResults %>% 
+don  = gwasResults %>% 
   
   # Compute chromosome size
   group_by(chromosome) %>% 
   summarise(chr_len=max(base_pair_location)) %>% 
   
   # Calculate cumulative position of each chromosome
-  mutate(tot=cumsum(as.numeric(chr_len)-as.numeric(chr_len))) %>%
+  mutate(tot=cumsum(as.numeric(chr_len))-as.numeric(chr_len)) %>%
   select(-chr_len) %>%
   
   # Add this info to the initial dataset
@@ -141,13 +73,9 @@ don <- gwasResults %>%
   mutate( BPcum=base_pair_location+tot)
 
 axisdf = don %>%
-  
   group_by(chromosome) %>%
-  summarize(center=((as.numeric(max(BPcum)) + as.numeric(min(BPcum) ))) / 2 )
-```
+  summarize(center=(as.numeric(max(BPcum)) + as.numeric(min(BPcum) )) / 2 )
 
-
-```{r}
 man_plot = ggplot(don, aes(x=BPcum, y=-log10(p_value))) +
     
     # Show all points
@@ -159,7 +87,7 @@ man_plot = ggplot(don, aes(x=BPcum, y=-log10(p_value))) +
     # custom X axis:
     scale_x_continuous( label = axisdf$chromosome, breaks= axisdf$center ) +
     scale_y_continuous(expand = c(0, 0) ) +     # remove space between plot area and x axis
-  
+
     # Custom the theme:
     theme_bw() +
     theme( 
@@ -173,6 +101,87 @@ man_plot
 ggsave("manhattan_plot.png")
 ```
 
+## Create Ideogram
 
+Documentation can be found here:
+https://cran.r-project.org/web/packages/RIdeogram/vignettes/RIdeogram.html
+
+A gene density overlay is used.
+
+```{r}
+gwasResults_sig = filter(gwasResults, p_value <= cutoff)
+shared_sig = intersect(gwasResults_sig$rsid, twasResults$rsid)
+
+twasIdeo = filter(twasResults, !rsid %in% shared_sig) %>%
+  select(CHR, P0, P1) %>%
+  rename(Chr = CHR,  Start = P0, End = P1) %>%
+  mutate(Chr = as.integer(Chr), Start = as.integer(Start), 
+         End = as.numeric(End), Type = "TWAS", Shape = "box", color = "33a02c")
+
+gwasIdeo = filter(gwasResults_sig, !rsid %in% shared_sig) %>%
+  select(base_pair_location, chromosome) %>%
+  mutate(End = as.integer(base_pair_location+1), 
+         base_pair_location = as.integer(base_pair_location),
+         Type = "GWAS", Shape = "circle", color = "6a3d9a") %>%
+  rename(Start = base_pair_location, Chr = chromosome)
+
+sharedIdeo = filter(twasResults, rsid %in% shared_sig) %>%
+  select(CHR, P0, P1) %>%
+  rename(Chr = CHR,  Start = P0, End = P1) %>%
+  mutate(Chr = as.integer(Chr), Start = as.integer(Start), End = as.numeric(End), Type = "Both", Shape = "triangle", color = "ff7f00")
+
+dfIdeo = rbind(twasIdeo, gwasIdeo) %>%
+  rbind(sharedIdeo) %>%
+  select(Type, Shape, Chr, Start, End, color)
+
+ideogram(karyotype = human_karyotype, overlaid = gene_density, label = dfIdeo, label_type = "marker")
+
+# increased quality to 600
+convertSVG("chromosome.svg", device = "png", dpi=600)
+```
+
+## Merge TWAS and GWAS results
+
+Get a data frame that has the full set of results. The merge is performed by rsID. 
+The rsID for the twas corresponds to the columns `BEST.GWAS.ID`. 
+
+```{r}
+match_df = merge(twasResults, gwasResults) %>%
+  # remove rows where the GWAS p-value is less than the cutoff
+  filter(p_value <= cutoff) %>%
+  mutate(rsid_id = paste0(rsid, "/", ID))
+```
+
+```{r}
+match_df_gwas = select(match_df, p_value, rsid_id, Z) %>%
+  mutate(model = "GWAS")
+
+match_df_twas = select(match_df, FDR, rsid_id, TWAS.Z, model) %>%
+  rename(p_value = FDR, Z = TWAS.Z)
+
+df_match_long = rbind(match_df_gwas, match_df_twas)
+write.table(df_match_long, "df_match_long.tsv",sep = "\t", quote = F, 
+            row.names = F)
+
+df_match_wide = cbind(select(match_df, p_value, rsid_id, Z, chromosome, 
+                             base_pair_location), select(match_df, FDR, rsid_id, TWAS.Z, model))
+write.table(df_match_wide, "df_match_wide.tsv", , sep = "\t", quote = F, 
+            row.names = F)
+```
+
+This bar charts compares the affect sizes (Z-scores) of the variants from the 
+TWAS and GWAS. Additionally the data set for the eQTL model in the TWAS is 
+separated by color. 
+
+```{r}
+bar_match = ggplot(df_match_long, aes(fill=model, y=Z, x=rsid_id)) + 
+  geom_bar(position="dodge", stat="identity") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust=0.5), 
+        axis.title.y=element_blank(), legend.title=element_blank()) +
+  coord_flip()
+bar_match
+ggsave("bar_match.png")
+```
 
 
